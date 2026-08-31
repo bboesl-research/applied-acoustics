@@ -1,4 +1,4 @@
-# SFAI Bode Data Processing and Peak Analysis
+# Swept Frequency Acoustic Interferometry (SFAI) Bode Data Processing and Peak Analysis
 
 This workflow processes frequency-domain magnitude data collected using the Bode Analyzer for SFAI analysis. The notebooks are intended to be run sequentially:
 
