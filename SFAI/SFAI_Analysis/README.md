@@ -6,7 +6,7 @@ This workflow processes frequency-domain magnitude data collected using the Bode
 2. `step2_gaussian_convolution.ipynb` – smooths and interpolates each magnitude curve.
 3. `step3_peaks_halfwidth.ipynb` – detects peaks within selected frequency regions and calculates peak widths.
 
-### If you are working with the 'BODE_AUTO_v9.vi' with LabVIEW, consider merging these code into an automated process as the 'BODE_AUTO_v9.vi' generates A LOT of data. These codes are meant for small sample sizes.
+If you are working with the `BODE_AUTO_v9.vi` with LabVIEW, consider merging these code into an automated process as the `BODE_AUTO_v9.vi` generates A LOT of data. These codes are meant for a small number of SFAI sweeps. The maximum number of sweeps this has been used for is 30-40 sweeps, totaling to a data analysis process of 2+ hours.
 
 ## Important Data Requirements
 
