@@ -14,6 +14,9 @@ The deployed Streamlit application can be accessed here:
 
 If the app is not running, please email Valerie at brachoperez.v@gmail.com. The app may become inactive after a period of no use, and she can reactivate it.
 
+**Using the AI Agents (Optional):**
+A Gemini API key is not required for the main application because the standard app functionality uses locally stored resources. However, if you would like to run the AI agents and view their generated responses, you will need your own Gemini API key. *To obtain one, go to Google AI Studio, sign in with your Google account, create a Gemini API key, and then save it as the GEMINI_API_KEY environment variable using the instructions below.*
+
 ---
 
 ## Project Overview
