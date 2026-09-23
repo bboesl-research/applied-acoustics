@@ -1,4 +1,4 @@
-# wave-tutor-project
+# Wave Tutor
 
 ## Purpose of the Application
 
@@ -11,6 +11,8 @@ The app uses Socratic AI tutoring agents, including a **Research Assistant** and
 The deployed Streamlit application can be accessed here:
 
 **[Wave Tutor – NDT](https://wave-tutor-ndt-nr4vq3u3vvdtqjz38dkuad.streamlit.app/)**
+
+If the app is not running, please email Valerie at brachoperez.v@gmail.com. The app may become inactive after a period of no use, and she can reactivate it.
 
 ---
 
