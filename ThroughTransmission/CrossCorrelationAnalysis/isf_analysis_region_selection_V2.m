@@ -1,305 +1,234 @@
 function [leftBoundary, rightBoundary] = isf_analysis_region_selection_V2 (samplingRate, frequency, sampleThickness, fileType, sampleNumber, myFolder, baselineArray)
+%ISF_ANALYSIS_REGION_SELECTION_V2 Select the end of front-end noise only.
+%
+% This version preserves the useful diagnostic workflow from the original:
+%   1) choose how many evenly spaced files to inspect,
+%   2) inspect representative raw waveforms,
+%   3) choose the end of the front-end noise,
+%   4) preview representative waveforms with ONLY that front-end removed,
+%   5) display preliminary sound-speed values using the established
+%      cross-correlation convention,
+%   6) accept the selection or repeat it.
+%
+% IMPORTANT: No automatic left boundary and no right boundary are calculated.
+% The selected front-end-noise index is the only cutoff. Everything after it
+% is preserved for the established cross-correlation analysis.
+%
+% The original function signature is preserved so the existing app can call
+% this function without changing the established cross-correlation logic.
 
-go = 0;
-while go == 0
+    %#ok<INUSD> % frequency retained for compatibility with the existing app
 
-    % samplingRate = 2.50e9; % sampling rate (in samples per second) %from main code
-    dt = 1.0/samplingRate; % time step (in seconds)
-    %frequency = 1.5e6;%Hz %from main code
-    numberofCycles=5; %from main code
-    %sampleThickness = 6; %from main code
-    excitationTime = (numberofCycles/frequency)*1e6;
-    minSSaccepted = 1;
-    maxDelayAccepted = sampleThickness/minSSaccepted;
-    
-    %fileType = '.isf';
-    %sampleNumber = 1;
-    
-    promptText = sprintf(['To create analysis region, input the number ' ...
-        '(positve whole even number) of evenly time spaced divisions you would ' ...
-        'like to display for analysis window selection']); 
-    prompt = {promptText};
-    dlgtitle = sprintf('Select Number of Divisions');
-    definput = {'2'};
-    field_size = [1, 100];
-    answer = inputdlg(prompt,dlgtitle,field_size,definput);
-    divNum = str2double(answer{1});
-    while ~(divNum>0 && mod(divNum,1)==0 && mod(divNum,2)==0)
-        promptText = sprintf('Selection invalid, try again. Enter a positive whole even number.'); 
-        prompt = {promptText};
-        dlgtitle = sprintf('Select Number of Divisions');
-        definput = {'2'};
-        field_size = [1, 100];
-        answer = inputdlg(prompt,dlgtitle,field_size,definput);
-        divNum =str2double(answer{1});
-    end
-   
     j = sampleNumber;
-    % get a list of all files in the folder with the desired file name pattern
-    filePattern = fullfile(myFolder,['*_ch' int2str(j) '_*' fileType]);
-    s = dir(filePattern); % structure array containing attributes of files
-    
-    % 's' is the struct array. 'datenum' is the field that contains the
-    % serial date time1
-    
-    T        = struct2table(s); % convert the struct array to a table
-    sortedT  = sortrows(T,'datenum'); % sort the table by 'datenum'
-    theFiles = table2struct(sortedT); % change it back to struct array
-    
-    testNumDiv = round(linspace(1,length(theFiles),divNum));
-    
-    figNum = 10+j;
-    figure(figNum);
-    hold on
-    tiledlayout(length(testNumDiv)/2,2);
-    
-    
-    for i = length(testNumDiv):-1:1
-    
-        for k = testNumDiv(1,i)
-            baseFileName = theFiles(k).name;
-            fullFileName = fullfile(theFiles(k).folder, baseFileName);
-            fprintf(1, 'Now reading %s\n', fullFileName);
-    
-            % vector of amplitudes gathered from acquired samples
-            switch fileType
-            case '.wfm'
-                [sampleArray] = wfm3read(fullFileName);
-            case '.isf'
-                [sampleArray] = isfread(fullFileName);
-            case '.csv'
-                [sampleArray] = readmatrix(fullFileName);
-            otherwise
-                [sampleArray] = wfm2read(fullFileName);
-            end
-            
-            nexttile(i)
-            plot(sampleArray)
-            hold on;
-            grid on
-            grid minor
-            title("Channel " + j + ". File " + k)
-            
-        end
-            
+    dt = 1.0 / samplingRate;
+
+    % Find and sort files for this channel.
+    filePattern = fullfile(myFolder, ['*_ch' int2str(j) '_*' fileType]);
+    s = dir(filePattern);
+
+    if isempty(s)
+        error('No %s files were found for Channel %d in %s.', fileType, j, myFolder);
     end
-    
-    promptText = sprintf(['Please indicate index of the end of the front-end' ...
-        ' noise Figure %d. Enter a positive whole number.'], figNum);
-    prompt = {promptText};
-    dlgtitle = sprintf('Index for End of Front-End Noise');
-    definput = {'1'};
-    file_size = [1,100];
 
-    answer = inputdlg(prompt,dlgtitle,file_size,definput);
-    front_end_noise = str2double(answer{1});
+    T = struct2table(s);
+    sortedT = sortrows(T, 'datenum');
+    theFiles = table2struct(sortedT);
 
-    while ~(front_end_noise>0 && mod(front_end_noise,1)==0)
-        
-        promptText = sprintf('Selection invalid, try again. Enter a positive whole number');
+    go = 0;
+
+    while go == 0
+        %% Choose how many evenly spaced files to inspect
+        promptText = sprintf(['To inspect the data across the run, enter the number ' ...
+            '(positive whole even number) of evenly spaced files you would like ' ...
+            'to display for Channel %d.'], j);
         prompt = {promptText};
-        dlgtitle = sprintf('Index for End of Front-End Noise');
-        definput = {'1'};
-        file_size = [1,100];
-    
-        answer = inputdlg(prompt,dlgtitle,file_size,definput);
-        front_end_noise = str2double(answer{1});
-        
-    end
-    
-    for i = length(testNumDiv):-1:1
-    
-        for k = testNumDiv(1,i)
-            baseFileName = theFiles(k).name;
-            fullFileName = fullfile(theFiles(k).folder, baseFileName);
-            fprintf(1, 'Now reading %s\n', fullFileName);
-    
-            % vector of amplitudes gathered from acquired samples
-            switch fileType
-            case '.wfm'
-                [sampleArray] = wfm3read(fullFileName);
-            case '.isf'
-                [sampleArray] = isfread(fullFileName);
-            case '.csv'
-                [sampleArray] = readmatrix(fullFileName);
-            otherwise
-                [sampleArray] = wfm2read(fullFileName);
-            end
-            
-            sampleArray(1:front_end_noise) = 0;
-            nexttile(i)
-            plot(sampleArray)
-            hold on;
-            title("Channel " + j + ". File " + k)
-    
-        end
-    
-    end   
-    
-    promptText = sprintf(['Select treshold of peak finder (0.0 < threshold < 1.0). ' ...
-        'Example: 0.7 includes peaks that are 70 percent of the max peak.']);
-    prompt = {promptText};
-    dlgtitle = sprintf("Threshold");
-    definput = {'0.7'};
-    field_size = [1,100];
-    answer = inputdlg(prompt,dlgtitle,field_size,definput);
-    thresholdSample = str2double(answer{1});
+        dlgtitle = sprintf('Select Number of Divisions - Channel %d', j);
+        definput = {'4'};
+        field_size = [1, 100];
 
-    while ~(thresholdSample>0 && thresholdSample<1)
-        promptText = sprintf('Selection invalid, try again. 0.0 < threshold < 1.0.');
-        prompt{promptText};
-        dlgtitle = sprintf("Threshold");
-        definput = '{0.7}';
-        field_size = [1,100];
-        answer = inputdlg(prompt,dlgtitle,field_size,definput);
-        thresholdSample = str2double(answer{1});
-    end
-    
-    for i = length(testNumDiv):-1:1
-    
-        for k = testNumDiv(1,i)
-            baseFileName = theFiles(k).name;
-            fullFileName = fullfile(theFiles(k).folder, baseFileName);
-            fprintf(1, 'Now reading %s\n', fullFileName);
-    
-            % vector of amplitudes gathered from acquired samples
-            switch fileType
-            case '.wfm'
-                [sampleArray] = wfm3read(fullFileName);
-            case '.isf'
-                [sampleArray] = isfread(fullFileName);
-            case '.csv'
-                [sampleArray] = readmatrix(fullFileName);
-            otherwise
-                [sampleArray] = wfm2read(fullFileName);
-            end
-    
-            sampleArray(1:front_end_noise) = 0;
-            maximumS=max(sampleArray);
-            [pksS, locS] = findpeaks(sampleArray, 'MinPeakHeight', maximumS*thresholdSample);
-            nexttile(i)
-            plot(locS,pksS,'or');
-            hold on;
-            title("Channel " + j + ". File " + k)
-    
+        answer = inputdlg(prompt, dlgtitle, field_size, definput);
+        if isempty(answer)
+            error('Analysis-region selection was cancelled by the user.');
         end
-    
-    end
-    
-    for i = length(testNumDiv):-1:1
-    
-        for k = testNumDiv(1,i)
-            baseFileName = theFiles(k).name;
-            fullFileName = fullfile(theFiles(k).folder, baseFileName);
+        divNum = str2double(answer{1});
+
+        while ~(isfinite(divNum) && divNum > 0 && mod(divNum,1) == 0 && mod(divNum,2) == 0)
+            answer = inputdlg({'Enter a positive whole even number.'}, ...
+                dlgtitle, field_size, definput);
+            if isempty(answer)
+                error('Analysis-region selection was cancelled by the user.');
+            end
+            divNum = str2double(answer{1});
+        end
+
+        % Evenly spaced representative file indices. UNIQUE prevents duplicate
+        % indices if the requested number exceeds the available distinct files.
+        testNumDiv = unique(round(linspace(1, length(theFiles), divNum)), 'stable');
+
+        %% Show representative raw waveforms
+        figNum = 10 + j;
+        figure(figNum);
+        clf;
+        tiledlayout(ceil(length(testNumDiv)/2), 2);
+
+        for i = 1:length(testNumDiv)
+            k = testNumDiv(i);
+            fullFileName = fullfile(theFiles(k).folder, theFiles(k).name);
             fprintf(1, 'Now reading %s\n', fullFileName);
-    
-            % vector of amplitudes gathered from acquired samples
-            switch fileType
-            case '.wfm'
-                [sampleArray] = wfm3read(fullFileName);
-            case '.isf'
-                [sampleArray] = isfread(fullFileName);
-            case '.csv'
-                [sampleArray] = readmatrix(fullFileName);
-            otherwise
-                [sampleArray] = wfm2read(fullFileName);
-            end
-    
-            sampleArray(1:front_end_noise) = 0;
-            maximumS=max(sampleArray);
-            [pksS, locS] = findpeaks(sampleArray, 'MinPeakHeight', maximumS*thresholdSample);
-    
-            delayTimeS = (locS-1)*dt*1e6;
-            delayTimeMatrixS = [delayTimeS, locS, locS-1];
-            delayTimeMatrixScleaned = delayTimeMatrixS;
-            delayTimeMatrixScleaned(1,1)=NaN;
-            [jS,ignoreS] = size(delayTimeS);
-            threshold=0.25;
-            
-            for f=2:1:jS
-                percentDiff = (delayTimeMatrixS(f,2)-delayTimeMatrixS(f-1,2))/((delayTimeMatrixS(f,2)+delayTimeMatrixS(f-1,2))/2);
-                if percentDiff>threshold
-                    delayTimeMatrixScleaned(f,1)=NaN;
-                end
-            end
-            
-            [boundary, ignoreC] = find(isnan(delayTimeMatrixScleaned));
-            [countR, ignoreC] = size(boundary);
-            
-            cutOffLeftInBoundary = [1];
-            cutOffRightInBoundary = [];
-            for g=2:1:countR
-            
-            
-                timeD = delayTimeMatrixS(boundary(g-1,1),1);
-                if timeD<excitationTime
-                    cutOffLeftInBoundary(end+1,1) = g;
-                elseif timeD>maxDelayAccepted
-                    cutOffRightInBoundary(end+1,1) = g;
-            
-                end
-            
-            end
-            
-            cutOffLeftInBoundaryIndex = max(cutOffLeftInBoundary);
-            mainPoint = delayTimeMatrixS(boundary(cutOffLeftInBoundaryIndex,1),2);
-            
-            leftToleranceDT = 1;
-            leftToleranceDP = leftToleranceDT*samplingRate*1e-6;
-            leftBoundary = round(mainPoint - leftToleranceDP);
-            rightBoundaryDT = 1.75;
-            rightBoundaryDP = rightBoundaryDT*samplingRate*1e-6;
-            rightBoundary = round(mainPoint + rightBoundaryDP);
-            
-            sampleArray(1:leftBoundary) = 0;
-            sampleArray(rightBoundary:end) = 0;
-    
-            nexttile(i)
+
+            sampleArray = readWaveform(fullFileName, fileType);
+
+            nexttile;
             plot(sampleArray);
-            title("Channel " + j + ". File " + k)
-            % cross-corraltion vector of the input and output waveforms
-            crossCorr = cross_correlation(sampleArray,baselineArray);
-            
-            % maximum value in 'crossCorr' 
-            maximum = max(crossCorr); % comment this out in the case of shear data
-            
-            % time of flight (in microseconds)
-            maxIDXval = find(crossCorr==maximum);
-            maxIDX = max(maxIDXval);
-            flightTime = maxIDX*dt*1e6;
-            distance = 6;
-            soundspeed(i,2) = distance/flightTime;
-            soundspeed(i,1) = k;
-            
-            hold on
+            grid on;
+            grid minor;
+            title("Channel " + j + ". File " + k + " - Raw");
+            xlabel('Sample index');
+            ylabel('Amplitude');
         end
-    
-    end
-    myTable = array2table(soundspeed, 'VariableNames', {'File Number', 'Sound Speed (mm/us)'});
-    fig = uifigure("Name","Preliminary Sound Speed Values");
-    fig.Position(1:2) = [1500,500];
-    fig.Position(3:4) = [350,300];
-    uit = uitable(fig, 'Data', myTable);
-    uit.Position = [1 1 350 300]; % Adjust size and location
 
-    promptText = sprintf(['Verify analysis region selection and preliminary sound speed values. ' ...
-        '1 for YES || 0 for NO (selection process will restart)']);
-    prompt = {promptText};
-    dlgtitle = sprintf('Verify Analysis Region');
-    definput = {'1'};
-    field_size = [1,100];
-    answer = inputdlg(prompt,dlgtitle,field_size,definput);
-    go=str2double(answer{1});
-
-    while go~=1 && go~=0
-        promptText = sprintf(['Selection invalid, try again. ' ...
-        '1 for YES || 0 for NO (selection process will restart)']);
+        %% User selects the ONLY boundary: end of front-end noise
+        promptText = sprintf(['Please indicate the index where the front-end noise ends ' ...
+            'for Channel %d. Everything AFTER this index will be preserved.'], j);
         prompt = {promptText};
-        dlgtitle = sprintf('Verify Analysis Region');
+        dlgtitle = sprintf('End of Front-End Noise - Channel %d', j);
         definput = {'1'};
-        field_size = [1,100];
-        answer = inputdlg(prompt,dlgtitle,field_size,definput);
-        go=str2double(answer{1});
+        field_size = [1, 100];
+
+        answer = inputdlg(prompt, dlgtitle, field_size, definput);
+        if isempty(answer)
+            error('Analysis-region selection was cancelled by the user.');
+        end
+        leftBoundary = str2double(answer{1});
+
+        while ~(isfinite(leftBoundary) && leftBoundary >= 0 && mod(leftBoundary,1) == 0)
+            answer = inputdlg({'Enter a non-negative whole-number sample index.'}, ...
+                dlgtitle, field_size, definput);
+            if isempty(answer)
+                error('Analysis-region selection was cancelled by the user.');
+            end
+            leftBoundary = str2double(answer{1});
+        end
+
+        % Clamp to the waveform length so an accidental oversized entry cannot
+        % index beyond the data.
+        firstFileName = fullfile(theFiles(1).folder, theFiles(1).name);
+        firstArray = readWaveform(firstFileName, fileType);
+        leftBoundary = min(round(leftBoundary), length(firstArray));
+
+        %% Preview representative waveforms with ONLY front-end noise removed
+        previewFigNum = 100 + figNum;
+        figure(previewFigNum);
+        clf;
+        tiledlayout(ceil(length(testNumDiv)/2), 2);
+
+        %% Preliminary sound speed values (diagnostic only)
+        soundspeed = nan(length(testNumDiv), 2);
+
+        for i = 1:length(testNumDiv)
+            k = testNumDiv(i);
+            fullFileName = fullfile(theFiles(k).folder, theFiles(k).name);
+            sampleArray = readWaveform(fullFileName, fileType);
+
+            % ONLY preprocessing operation: remove the selected front-end noise.
+            if leftBoundary > 0
+                sampleArray(1:leftBoundary) = 0;
+            end
+
+            nexttile;
+            plot(sampleArray);
+            grid on;
+            grid minor;
+            title("Channel " + j + ". File " + k + " - Front-End Removed");
+            xlabel('Sample index');
+            ylabel('Amplitude');
+
+            % Use the established cross-correlation function and the same
+            % positive-maximum/index convention used by the existing analysis.
+            crossCorr = cross_correlation(sampleArray, baselineArray);
+            maximum = max(crossCorr);
+            maxIDXval = find(crossCorr == maximum);
+
+            if isempty(maxIDXval)
+                prelimSpeed = NaN;
+            else
+                maxIDX = max(maxIDXval);
+                flightTime_us = maxIDX * dt * 1e6;
+
+                if flightTime_us > 0
+                    prelimSpeed = sampleThickness / flightTime_us;
+                else
+                    prelimSpeed = NaN;
+                end
+            end
+
+            soundspeed(i,1) = k;
+            soundspeed(i,2) = prelimSpeed;
+        end
+
+        %% Display preliminary sound-speed table
+        myTable = array2table(soundspeed, ...
+            'VariableNames', {'File Number', 'Sound Speed (mm/us)'});
+
+        tableFig = uifigure('Name', sprintf('Preliminary Sound Speed Values - Channel %d', j));
+        tableFig.Position(1:2) = [1200, 450];
+        tableFig.Position(3:4) = [380, 320];
+        uit = uitable(tableFig, 'Data', myTable);
+        uit.Position = [1 1 380 320];
+
+        %% Let user accept the front-end selection or repeat
+        promptText = sprintf(['Verify the front-end-noise cutoff and preliminary sound-speed values for Channel %d. ' ...
+            '1 for YES || 0 for NO (selection process will restart).'], j);
+        prompt = {promptText};
+        dlgtitle = sprintf('Verify Front-End Selection - Channel %d', j);
+        definput = {'1'};
+        field_size = [1, 100];
+
+        answer = inputdlg(prompt, dlgtitle, field_size, definput);
+        if isempty(answer)
+            if isvalid(tableFig)
+                close(tableFig);
+            end
+            error('Analysis-region selection was cancelled by the user.');
+        end
+        go = str2double(answer{1});
+
+        while ~(go == 0 || go == 1)
+            answer = inputdlg({'Enter 1 for YES or 0 for NO.'}, ...
+                dlgtitle, field_size, definput);
+            if isempty(answer)
+                if isvalid(tableFig)
+                    close(tableFig);
+                end
+                error('Analysis-region selection was cancelled by the user.');
+            end
+            go = str2double(answer{1});
+        end
+
+        if isvalid(tableFig)
+            close(tableFig);
+        end
     end
-    
+
+    % Preserve the old two-output interface. There is deliberately no right
+    % cutoff. The app should preserve every sample after leftBoundary.
+    rightBoundary = Inf;
+
+end
+
+
+function sampleArray = readWaveform(fullFileName, fileType)
+%READWAVEFORM Local helper to keep the file-reading behavior consistent.
+
+    switch fileType
+        case '.wfm'
+            sampleArray = wfm3read(fullFileName);
+        case '.isf'
+            sampleArray = isfread(fullFileName);
+        case '.csv'
+            sampleArray = readmatrix(fullFileName);
+        otherwise
+            sampleArray = wfm3read(fullFileName);
+    end
+
 end
