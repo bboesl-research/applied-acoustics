@@ -6,7 +6,7 @@ This MATLAB App Designer program processes ultrasonic through-transmission data 
 
 The app was developed for laboratory datasets in which multiple oscilloscope waveform files are collected over time for up to four channels/samples.
 
-A major part of the workflow is the removal of front-end noise and restriction of the waveform to the region containing the transmitted ultrasonic signal before cross-correlation is performed. This prevents large noise or electrical artifacts at the beginning of the waveform from dominating the correlation result.
+A major part of the workflow is the removal of front-end noise before cross-correlation is performed. The user manually identifies the index where the front-end artifact ends; waveform values from the beginning of the record through that index are set to zero, while the remainder of the received waveform is preserved. This prevents large electrical or transducer artifacts at the beginning of the waveform from dominating the correlation result without automatically truncating the transmitted packet.
 
 The app also contains a data-cleaning step that ensures all channels contain matching test numbers before analysis.
 
@@ -22,7 +22,7 @@ Computes the cross-correlation between a sample waveform and the baseline/excita
 Compares the test numbers available in each channel. If a test number is missing from any channel, that test is removed from all channels in a copied clean dataset so that the channels remain aligned.
 
 **isf_analysis_region_selection_V2.m**
-Interactive routine used to determine the waveform region that should be analyzed. It allows the user to identify the end of the front-end noise, applies peak detection, estimates a usable signal window, and displays preliminary sound-speed values for verification.
+Interactive routine used to identify and remove front-end noise before cross-correlation. The user chooses how many evenly spaced files across the dataset to inspect, manually selects the sample index where the front-end artifact ends, previews the representative waveforms with only that front-end portion removed, and reviews preliminary sound-speed values before accepting or repeating the selection. The routine does not calculate or apply an automatic right-side cutoff.
 
 **isfread.m**
 Reads Tektronix `.isf` waveform files.
@@ -31,7 +31,7 @@ Reads Tektronix `.isf` waveform files.
 Reads Tektronix `.wfm` waveform files. This is a modified version of `wfm2read` with more robust handling of NULL-terminated metadata fields.
 
 **crosscorr_parseV3.m**
-Script/development version of the cross-correlation analysis workflow. The App Designer program contains the primary user interface.
+Script/development version of the original cross-correlation analysis workflow. The App Designer program contains the primary user interface and is the version normally run. `crosscorr_parseV3.m` is retained as a historical/reference copy of the established analysis logic so the original workflow remains documented even as the app interface and preprocessing are maintained.
 
 ## MATLAB Requirements
 
@@ -98,9 +98,9 @@ Files are also sorted by their filesystem date/time during processing.
    * Cycle offset
 9. Verify all entries before selecting **Start Data Processing**.
 10. The app first cleans the dataset so every analyzed channel contains matching test numbers.
-11. For each channel, the app opens an interactive analysis-region-selection procedure.
-12. Follow the prompts to identify the usable portion of the waveform and verify the preliminary sound-speed results.
-13. The app performs cross-correlation, follows the selected correlation peak through the dataset, calculates time of flight and sound speed, and plots sound speed versus cure/test time.
+11. For each channel, the app opens an interactive front-end-noise-removal procedure.
+12. Choose how many evenly spaced files across the run to inspect, identify the index where the front-end artifact ends, preview the waveforms with that front-end portion removed, and verify the preliminary sound-speed results.
+13. The app then zeroes only the front-end portion of each waveform, preserves the remainder of the received packet, performs cross-correlation, follows the selected correlation peak through the dataset, calculates time of flight and sound speed, and plots sound speed versus cure/test time.
 14. If multiple candidate correlation peaks are being tracked, select the curve that represents the physically correct result when prompted.
 15. Final data are written to `Results.csv` in the Results Folder specified in the app.
 
@@ -108,21 +108,24 @@ Files are also sorted by their filesystem date/time during processing.
 
 This is an important part of the program.
 
-Oscilloscope through-transmission recordings can contain a large electrical artifact or other front-end noise near the beginning of the acquisition. If this region is included without restriction, the noise may produce a stronger correlation response than the actual transmitted ultrasonic signal.
+Oscilloscope through-transmission recordings can contain a large electrical artifact or other front-end noise near the beginning of the acquisition. If this region is included, the artifact may produce a stronger correlation response than the transmitted ultrasonic signal.
 
-The analysis-region routine therefore asks the user to identify the index corresponding to the end of the front-end noise.
+The current analysis-region routine therefore asks the user to manually identify the sample index corresponding to the end of the front-end noise.
 
 The program then:
 
-1. Sets the waveform values from the beginning of the record through the selected front-end-noise index to zero.
-2. Uses peak detection on the remaining waveform.
-3. Uses the excitation frequency, sample thickness, sampling rate, and expected propagation behavior to estimate the region containing the transmitted signal.
-4. Defines a left and right analysis boundary around the selected signal region.
-5. Sets all waveform values outside those boundaries to zero.
-6. Displays the resulting waveform and preliminary sound-speed values.
-7. Asks the user to verify the region. If rejected, the region-selection procedure restarts.
+1. Asks how many evenly spaced files across the dataset should be displayed for inspection.
+2. Displays those representative raw waveforms.
+3. Prompts the user to select the index where the front-end noise ends.
+4. Sets the waveform values from the beginning of the record through that selected index to zero.
+5. Preserves every waveform sample after the selected front-end cutoff; no automatic right boundary is calculated or applied.
+6. Displays the same representative waveforms with only the front-end portion removed.
+7. Calculates preliminary sound-speed values using the established cross-correlation convention and the sample thickness entered for that channel.
+8. Asks the user to verify the front-end cutoff and preliminary sound-speed values. If rejected, the selection procedure restarts.
 
-This step is intended to isolate the physically meaningful transmitted ultrasonic signal before cross-correlation.
+The preliminary sound-speed display is diagnostic only. It does not alter the selected cutoff, create a second boundary, or determine what portion of the transmitted packet is retained.
+
+This approach intentionally avoids automatically estimating the transmitted-signal window from excitation frequency, pulse duration, peak spacing, or assumed propagation limits. The purpose of this preprocessing step is only to prevent the initial front-end artifact from dominating the correlation while preserving the complete received packet afterward.
 
 ## Cross-Correlation Method
 
@@ -269,32 +272,13 @@ inside `CrossCorrelationApp.mlapp`.
 
 * The start time can often be obtained from the experimental folder name.
 
-* The analysis assumes that the transmitted signal appears after the initial front-end noise and within a physically reasonable delay based on the sample thickness.
+* The analysis assumes that the transmitted signal appears after the initial front-end noise selected by the user.
 
-* The region-selection function currently assumes five excitation cycles when estimating excitation duration:
+* The front-end cutoff is selected manually from representative waveforms. Everything after that cutoff is preserved.
 
-  `numberofCycles = 5`
+* The region-selection routine no longer uses excitation frequency, a five-cycle-duration assumption, minimum expected sound speed, fixed left/right timing tolerances, or an automatically calculated right boundary to decide what part of the received waveform is retained.
 
-* If a substantially different excitation waveform is used, this assumption should be reviewed.
-
-* The region-selection routine currently uses:
-
-  `minSSaccepted = 1`
-
-  corresponding to a minimum expected sound speed of approximately 1 mm/us when estimating the maximum acceptable delay.
-
-* The analysis window currently uses fixed time tolerances around the detected signal region:
-
-  * approximately 1 us before the selected point
-  * approximately 1.75 us after the selected point
-
-  These values may need adjustment for substantially different frequencies, pulse lengths, materials, or acquisition settings.
-
-* The preliminary sound-speed display inside `isf_analysis_region_selection_V2.m` contains a hard-coded distance value of:
-
-  `distance = 6`
-
-  This is used only for the preliminary verification table. Future users should verify this value if sample thickness differs significantly from 6 mm. The main final sound-speed calculation uses the sample thickness entered in the app.
+* The preliminary sound-speed table is diagnostic only and uses the sample thickness entered for the current channel. It does not change the selected cutoff or the final cross-correlation logic.
 
 * The program depends strongly on consistent file naming.
 
@@ -321,7 +305,7 @@ Check:
 * sample thickness
 * sampling rate
 * excitation frequency
-* selected analysis region
+* selected front-end-noise cutoff
 * selected correlation curve/cycle
 * whether the front-end noise was correctly excluded
 
@@ -329,7 +313,7 @@ Check:
 Try a different Cycle Offset and select the physically reasonable continuous curve when prompted.
 
 **Early noise dominates the result**
-Repeat the analysis-region selection and make sure the selected end-of-front-end-noise index is after the initial electrical/noise artifact but before the transmitted ultrasonic signal.
+Repeat the front-end-noise selection and make sure the selected cutoff is after the initial electrical/transducer artifact but before the transmitted ultrasonic packet. The program will preserve everything after that selected cutoff.
 
 **.wfm file does not read correctly**
 `wfm3read.m` was developed for Tektronix waveform formats. Compatibility may vary between oscilloscope families or firmware/file-format versions.
@@ -348,7 +332,7 @@ This is especially important when modifying:
 
 * front-end-noise handling
 * peak thresholds
-* analysis-window limits
+* front-end-noise cutoff handling
 * cycle-offset logic
 * sampling-rate assumptions
 * clock/time corrections
@@ -361,13 +345,13 @@ The main processing sequence is:
 
 Raw waveform files
 → Align test numbers across channels
-→ Remove/zero front-end noise
-→ Select transmitted-signal analysis region
+→ Inspect representative waveforms
+→ Select and zero front-end noise only
+→ Preserve the remainder of the received packet
 → Cross-correlate sample waveform with excitation waveform
 → Track correlation peak through successive measurements
 → Calculate time of flight
 → Calculate sound speed
 → Plot results and save `Results.csv`
 
-When using this program with a new experimental configuration, do not assume that the hard-coded timing correction, signal-window tolerances, five-cycle excitation assumption, or preliminary 6-mm distance are appropriate without verification.
-
+When using this program with a new experimental configuration, verify the hard-coded oscilloscope time correction, sampling rate, excitation frequency, sample thickness, and manually selected front-end-noise cutoff before relying on the calculated results.
