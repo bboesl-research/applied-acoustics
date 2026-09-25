@@ -62,28 +62,24 @@ applied-acoustics/
 │   │   ├── SpectralSpread (SubVI).vi
 │   │   └── README.md
 │   │
-│   ├── MATLAB_Analysis/
-│   │   ├── Time2FreqDomainAnalysis.mlapp
-│   │   └── README.md
-│   │
-│   └── README.md
+│   └── MATLAB_Analysis/
+│       ├── Time2FreqDomainAnalysis.mlapp
+│       └── README.md   
 │
 ├── ThroughTransmission/
 │   ├── LabVIEW_TT_Automation/
 │   │   ├── MDO32_2-2-Channel_V2.vi
 │   │   └── README.md
 │   │
-│   ├── CrossCorrelationAnalysis/
-│   │   ├── CrossCorrelationApp.mlapp
-│   │   ├── cross_correlation.m
-│   │   ├── crosscorr_parseV3.m
-│   │   ├── file_number_cleaning.m
-│   │   ├── isf_analysis_region_selection_V2.m
-│   │   ├── isfread.m
-│   │   ├── wfm3read.m
-│   │   └── README.md
-│   │
-│   └── README.md
+│   └── CrossCorrelationAnalysis/
+│       ├── CrossCorrelationApp.mlapp
+│       ├── cross_correlation.m
+│       ├── crosscorr_parseV3.m
+│       ├── file_number_cleaning.m
+│       ├── isf_analysis_region_selection_V2.m
+│       ├── isfread.m
+│       ├── wfm3read.m
+│       └── README.md  
 │
 └── WaveTutor/
     ├── app.py
