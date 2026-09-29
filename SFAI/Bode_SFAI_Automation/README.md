@@ -55,7 +55,7 @@ Keep an untouched copy of the original VI before allowing a newer version of Lab
 
 This program is intended for use with a:
 
-- **Bode 100**
+- **Bode 100 Vector Network Analyzer**
 
 Communication is performed over a TCP/IP socket connection.
 
@@ -164,7 +164,7 @@ TCPIP0::<IP_AD>::<PORT>:SOCKET
 
 This value identifies the Bode 100 TCP/IP socket connection used by LabVIEW.
 
-The correct IP address and port must correspond to the instrument/network configuration.
+The correct IP address and port must correspond to the instrument/network configuration and can be found when SPCI connection is started in the Bode Analyzer Suite (view demo video for further instruction).
 
 If communication cannot be established, verify the network connection and this device address before modifying the rest of the program.
 
@@ -595,11 +595,9 @@ A small temporary backlog may not necessarily indicate a problem, but a continuo
 
 ---
 
-## Do Not Change Sweep Parameters During a Dataset Unless Intended
+## Cannot Change Sweep Parameters During a Dataset 
 
 The saved data structure assumes that all rows correspond to the frequency array stored at the top of the file.
-
-Changing the frequency range or number of points partway through a test can make the resulting dataset difficult or invalid to interpret using that structure.
 
 If different sweep settings are required, stop the current test and begin a new dataset.
 
@@ -628,6 +626,7 @@ The saved frequency array preserves the frequency coordinates, but complete expe
 Check:
 
 - the Bode 100 is powered on;
+- SPCI connection in Bode Analyzer Suite is started;
 - the computer and instrument are connected to the network;
 - the IP address is correct;
 - the port is correct;
@@ -717,20 +716,6 @@ Changes to the trigger or waiting logic can cause:
 - synchronization problems.
 
 Trace the full command sequence before changing instrument-trigger logic.
-
----
-
-## Preserve Frequency/Data Alignment
-
-The saved file assumes that each S21 value corresponds directly to one frequency stored in the first row.
-
-If the number of points or returned data format is changed, verify that:
-
-- the frequency array length;
-- the returned S21 array length; and
-- the saved row length
-
-remain consistent.
 
 ---
 
