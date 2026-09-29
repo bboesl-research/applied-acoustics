@@ -31,6 +31,8 @@ Processed Results and Interpretation
 
 Not every folder is part of one single experimental pipeline. Each top-level project can be used independently.
 
+Additional documentation on specific measurement methods, analysis procedures, and research topics is available in the **GitHub Wiki**, including pages covering **Acoustic Measurement Methods** and the **Microgels to Cells** pilot study.
+
 ---
 
 # Repository Structure
