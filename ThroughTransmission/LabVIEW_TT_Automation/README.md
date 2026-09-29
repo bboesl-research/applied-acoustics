@@ -692,7 +692,7 @@ A typical later workflow may include:
 1. Identify the waveform files belonging to a particular iteration.
 2. Import the `.isf` waveform data.
 3. Reconstruct the time-domain waveform.
-4. Perform the desired ultrasonic analysis.
+4. Perform the desired ultrasonic analysis (check out: ThroughTransmission/CrossCorrelationAnalysis/README.md).
 5. Associate the result with the corresponding iteration/time.
 6. Compare the waveform-derived quantity with the measured temperature when relevant.
 7. Examine how the transmitted ultrasonic response changes over the duration of the test.
@@ -724,7 +724,7 @@ Students can inspect the block diagram directly in LabVIEW to trace individual i
 
 ---
 
-# Final Notes for Students
+# Final Notes 
 
 The central purpose of this VI is to automate **repeated through-transmission ultrasonic waveform acquisition while simultaneously collecting temperature information**.
 
