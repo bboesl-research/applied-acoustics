@@ -22,7 +22,7 @@ Computes the cross-correlation between a sample waveform and the baseline/excita
 Compares the test numbers available in each channel. If a test number is missing from any channel, that test is removed from all channels in a copied clean dataset so that the channels remain aligned.
 
 **isf_analysis_region_selection_V2.m**
-Interactive routine used to identify and remove front-end noise before cross-correlation. The user chooses how many evenly spaced files across the dataset to inspect, manually selects the sample index where the front-end artifact ends, previews the representative waveforms with only that front-end portion removed, and reviews preliminary sound-speed values before accepting or repeating the selection. The routine does not calculate or apply an automatic right-side cutoff.
+Interactive routine used to identify and remove front-end noise before cross-correlation. The user chooses how many evenly spaced files across the dataset to inspect, manually selects the sample index where the front-end artifact ends, previews the representative waveforms with only that front-end portion removed, and reviews preliminary sound-speed values before accepting or repeating the selection. 
 
 **isfread.m**
 Reads Tektronix `.isf` waveform files.
@@ -81,7 +81,7 @@ Files are also sorted by their filesystem date/time during processing.
 
 ## General Workflow
 
-1. Collect through-transmission ultrasonic data using the function generator and oscilloscope.
+1. Collect through-transmission ultrasonic data using the function generator, oscilloscope, and LabVIEW program.
 2. Save the excitation/reference waveform.
 3. Save the measured transmitted waveforms for each sample/channel.
 4. Create an empty folder that will store the cleaned copy of the raw data.
