@@ -22,7 +22,7 @@ Potential applications include acoustic monitoring, vibration analysis, machiner
 
 A key consideration when comparing spectral descriptors is that the framing settings should remain constant. Changes in window type, window length, or overlap affect the calculated spectrum and can therefore affect the resulting spectral descriptors.
 
-At the time of handoff, this application should be considered an **exploratory research tool rather than a validated nozzle-clogging detection system**. It provides a framework for investigating potential acoustic indicators of nozzle condition, but additional experimental work is required to determine which spectral features and analysis settings are reliable indicators of clogging.
+This application should be considered an **exploratory research tool rather than a validated nozzle-clogging detection system**. It provides a framework for investigating potential acoustic indicators of nozzle condition, but additional experimental work is required to determine which spectral features and analysis settings are reliable indicators of clogging.
 
 ---
 
@@ -798,7 +798,7 @@ The input routines may need to be modified if data are stored in a format other 
 
 It was created as a research and exploratory analysis tool rather than as finalized production software.
 
-Future students should expect that portions of the application may need to be modified as the Cold Spray Project progresses or as it is adapted to other datasets.
+Expect that portions of the application may need to be modified as the Cold Spray Project progresses or as it is adapted to other datasets.
 
 Areas that may benefit from future development include:
 
