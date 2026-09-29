@@ -220,7 +220,7 @@ The current front-panel value is:
 
 `450`
 
-Verify the units and correct sensitivity for the microphone being used before collecting quantitative acoustic measurements.
+with units of mV/Pa. Correct sensitivity for the microphone (in the block diagram) being used before collecting quantitative acoustic measurements.
 
 ---
 
@@ -248,7 +248,7 @@ The program includes the following window options:
 
 The selected window affects spectral leakage, amplitude behavior, equivalent noise bandwidth, and frequency-domain interpretation.
 
-If students are comparing results between experiments, the same window type should generally be used unless the effect of changing the window is intentionally being investigated.
+If you are comparing results between experiments, the same window type should generally be used unless the effect of changing the window is intentionally being investigated.
 
 ---
 
@@ -403,7 +403,7 @@ The supporting SubVI is:
 
 `Pa2dBSPL (SubVI).vi`
 
-The VI uses the standard acoustic reference pressure:
+The VI uses the standard acoustic reference pressure in air:
 
 ```text
 p_ref = 20 µPa = 2 × 10^-5 Pa
@@ -550,7 +550,7 @@ The program notes the following repeating sequence:
 Repeat
 ```
 
-This sequence intentionally changes the frequency content over time so that students can observe how the:
+This sequence intentionally changes the frequency content over time so that you can observe how the:
 
 - STFT;
 - spectral centroid; and
@@ -707,7 +707,7 @@ Converts the positive-frequency acoustic pressure spectrum to sound pressure lev
 
 ### General Operation
 
-The conversion uses the acoustic reference pressure:
+The conversion uses the acoustic reference pressure in air:
 
 ```text
 20 µPa
